@@ -1,7 +1,18 @@
 services:
+  nginx:
+    image: nginx:alpine
+    container_name: magento_nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./app:/var/www/html
+      - ./default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - php-fpm
+      
   opensearch:
     image: opensearchproject/opensearch:3
-    container_name: opensearch
+    container_name: magento_opensearch
     hostname: opensearch
     environment:
       discovery.type: single-node
@@ -36,13 +47,14 @@ services:
       - ./app:/var/www/html
     ports:
       - 9000:9000
+      - 9001:9001
     depends_on:
       mariadb:
         condition: service_healthy
 
   mariadb:
     image: mariadb:${MARIADB_VERSION}
-    container_name: mariadb
+    container_name: magento_mariadb
     restart: unless-stopped
     ports:
       - "${MARIADB_PORT}:3306"
