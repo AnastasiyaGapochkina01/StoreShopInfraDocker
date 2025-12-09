@@ -2,13 +2,17 @@ FROM php:8.3-fpm-bookworm
 
 ARG UID=33
 ARG GID=33
+ARG DEBIAN_FRONTEND=noninteractive
+ARG DEBCONF_NOWARNINGS="yes"
 
+COPY www.conf /usr/local/etc/php-fpm.d/www.conf
+COPY php.ini /usr/local/etc/php/conf.d/magento.ini
 RUN apt-get update && apt-get install -y \
     git curl unzip gnupg2 libpq-dev \
     libicu-dev libxml2-dev libonig-dev \
     libzip-dev libjpeg62-turbo-dev libpng-dev libfreetype6-dev \
     libxslt1-dev libssl-dev libmagickwand-dev \
-    libcurl4-openssl-dev pkg-config \
+    libcurl4-openssl-dev pkg-config iproute2 procps \
     && rm -rf /var/lib/apt/lists/*
 
 RUN docker-php-ext-configure gd \
@@ -28,16 +32,6 @@ RUN pecl install imagick && \
 
 RUN curl -sS https://getcomposer.org/installer | \
   php -- --install-dir=/usr/local/bin --filename=composer
-
-RUN { \
-    echo "memory_limit=2G"; \
-    echo "max_execution_time=3600"; \
-    echo "max_input_time=3600"; \
-    echo "max_input_vars=10000"; \
-    echo "upload_max_filesize=256M"; \
-    echo "post_max_size=256M"; \
-    echo "zlib.output_compression=On"; \
-} > /usr/local/etc/php/conf.d/magento.ini
 
 RUN mkdir -p /var/www/.config/composer
 WORKDIR /var/www/html
